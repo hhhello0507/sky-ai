@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 from datetime import datetime, timedelta
 import asyncio
-
 from src.ai.ai import SkyAI
 from src.model.store import Store
 from src.util.arduino.arduino import SkyArduino

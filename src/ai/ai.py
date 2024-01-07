@@ -12,11 +12,19 @@ class SkyAI:
 
     def predict(self, image, output_store: Store):
 
+        image = self._get_prepared_image(image)
+
+        prediction = self.model.predict(image, verbose=0)  # [[0.61519665 0.38480335]]
+        index = np.argmax(prediction)
+        output_store.predict_store[index] += 1
+
+    def _get_prepared_image(self, image):
+
         # 224 x 224로 변환
         image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_AREA)
 
         # 캠 보여주기
-        cv2.imshow("Webcam Image", image)
+        # cv2.imshow("Webcam Image", image)
 
         # 이미지 -> numpy배열
         # input shape으로 변환
@@ -25,14 +33,5 @@ class SkyAI:
         # 노멀라이즈 (범위: -1 ~ 1)
         image = (image / 127.5) - 1
 
-        # 예측
-        prediction = self.model.predict(image, verbose=0)  # [[0.61519665 0.38480335]]
-        index = np.argmax(prediction)
-        # class_name = class_names[index]
-        # confidence_score = prediction[0][index]
-        #
-        # # 예측 결과, 점수 출력
-        # print(f"결과: {class_name.split()[1]}   ", end="")
-        # print(f"점수: {np.round(confidence_score * 100)}%")
-        output_store.predict_store[index] += 1
+        return image
 
