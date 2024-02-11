@@ -4,11 +4,8 @@ char cmd;
 void setup() {
 
   pinMode(RXLED, OUTPUT);
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("Initialize Serial Monitor");
-
-  Serial1.begin(9600);
-  Serial1.println("Initialize Serial Hardware UART Pins");
 
   pinMode(16, OUTPUT);
   pinMode(14, OUTPUT);
