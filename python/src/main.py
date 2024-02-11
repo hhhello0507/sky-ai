@@ -8,7 +8,7 @@ from src.util.arduino.arduino import SkyArduino
 
 np.set_printoptions(suppress=True)
 skyAI = SkyAI(model_path="../res/model/g_model.h5")
-class_names = open("../labels.txt", "r").readlines()
+class_names = open("../res/labels.txt", "r").readlines()
 store = Store(class_names=class_names)
 
 camera = cv2.VideoCapture(1)
