@@ -10,20 +10,12 @@ from matplotlib import pyplot as plt
 from anomalib.post_processing import Visualizer, VisualizationMode
 from PIL import Image
 
-
-# def visualize(title: str, task: TaskType, predictions: ImageResult):
-#     visualizer = Visualizer(mode=VisualizationMode.FULL, task=task)
-#     output_image = visualizer.visualize_image(predictions)
-#     img = Image.fromarray(output_image)
-#
-#     plt.figure(dpi=300)
-#     plt.imshow(img)
-#     plt.title(title)
+from src.local import model_folder_path
 
 
-def predict(predict_image: np.ndarray):
-    openvino_model_path = Path.cwd() / "weights" / "openvino" / "model.bin"
-    metadata_path = Path.cwd() / "weights" / "openvino" / "metadata.json"
+def predictImage(model_name: str, predict_image: np.ndarray):
+    openvino_model_path = Path(model_folder_path) / model_name / "weights" / "openvino" / "model.bin"
+    metadata_path = Path(model_folder_path) / model_name / "weights" / "openvino" / "metadata.json"
 
     if not openvino_model_path.exists() or not metadata_path.exists():
         raise Exception("model is not exist")
@@ -44,3 +36,11 @@ def predict(predict_image: np.ndarray):
     #     # visualize(title=f'segmentation - {index} {predictions.pred_label}', task=TaskType.SEGMENTATION)
     #     plt.show()
 
+# def visualize(title: str, task: TaskType, predictions: ImageResult):
+#     visualizer = Visualizer(mode=VisualizationMode.FULL, task=task)
+#     output_image = visualizer.visualize_image(predictions)
+#     img = Image.fromarray(output_image)
+#
+#     plt.figure(dpi=300)
+#     plt.imshow(img)
+#     plt.title(title)

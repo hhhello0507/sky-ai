@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -13,12 +14,13 @@ from anomalib.utils.callbacks import (
     PostProcessingConfigurationCallback,
 )
 from anomalib.utils.callbacks.export import ExportCallback, ExportMode
-from constant import app_title
+
+from src.local import model_folder_path
 
 
-def train(product_name, train_path) -> str:
+def train(product_name: str, input_path: str) -> str:
     datamodule = Folder(
-        root=train_path,
+        root=input_path,
         normal_dir="normal",
         abnormal_dir="abnormal",
         normal_split_ratio=0.2,
@@ -36,7 +38,7 @@ def train(product_name, train_path) -> str:
         layers=["layer1", "layer2", "layer3"],
     )
 
-    export_path = str(os.path.join(app_title, product_name))
+    export_path = str(Path(model_folder_path) / product_name)
 
     callbacks = [
         MetricsConfigurationCallback(
