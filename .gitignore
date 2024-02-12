@@ -10,6 +10,13 @@ __pycache__/
 *.png
 *.HEIC
 
+.idea/
+cache/
+lightning_logs/
+weights/
+
+.h5
+
 # Distribution / packaging
 .Python
 build/
