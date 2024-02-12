@@ -4,6 +4,11 @@ from datetime import datetime, timedelta
 import asyncio
 from src.predict import predictImage
 from src.train import train
+import tkinter as tk
+from tkinter import messagebox
+import sv_ttk
+from tkinter import ttk
+from threading import Thread
 
 np.set_printoptions(suppress=True)
 
@@ -31,19 +36,44 @@ async def sendArduino():
         await asyncio.sleep(0.5)
 
 
-async def main():
-    mode = int(input("0: make model\n1: predict model\n"))
-    if not mode:
+async def main(mode):
+    if mode == 0:
         # make model
         model_path = train(product_name='h', input_path='../res/data1')
         print(model_path)
     else:
-        model_name = input("Enter model name\n")
-        await asyncio.gather(predict(model_name), sendArduino())
+        await asyncio.gather(predict(model_name_entry.get()), sendArduino())
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+def start_training():
+    main(0)
 
-    # camera.release()
-    # cv2.destroyAllWindows()
+
+def start_predicting():
+    model_name = model_name_entry.get()
+    if not model_name:
+        messagebox.showerror("Error", "Please enter model name")
+        return
+    main(1)
+
+
+# GUI 생성
+root = tk.Tk()
+root.title("Model Training and Prediction")
+
+# 모델 이름 입력 필드
+model_name_label = ttk.Label(root, text="Model Name:")
+model_name_label.pack()
+model_name_entry = ttk.Entry(root)
+model_name_entry.pack()
+
+# 버튼 생성
+train_button = ttk.Button(root, text="Train Model", command=start_training)
+train_button.pack()
+
+predict_button = ttk.Button(root, text="Start Prediction", command=start_predicting)
+predict_button.pack()
+
+sv_ttk.set_theme('light')
+
+root.mainloop()
