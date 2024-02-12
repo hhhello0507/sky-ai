@@ -13,11 +13,10 @@ from anomalib.utils.callbacks import (
     PostProcessingConfigurationCallback,
 )
 from anomalib.utils.callbacks.export import ExportCallback, ExportMode
-
 from constant import app_title
 
-def train(product_name, train_path) -> str:
 
+def train(product_name, train_path) -> str:
     datamodule = Folder(
         root=train_path,
         normal_dir="normal",
