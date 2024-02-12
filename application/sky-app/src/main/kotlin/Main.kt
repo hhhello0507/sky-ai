@@ -43,7 +43,7 @@ fun App() {
                 }
             }
             when (selectedItem) {
-                Page.MAKE_MODEL -> MakeModelView()
+                Page.MAKE_MODEL -> Text("make model")
                 Page.CAM -> Text("cam")
                 Page.SETTINGS -> Text("settings")
             }
