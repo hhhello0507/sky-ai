@@ -46,7 +46,7 @@ inferencer = OpenVINOInferencer(
 
 
 def training():
-    path = os.getcwd() + f"\\{product_name}"
+    path = Path.cwd() / product_name
 
     datamodule = Folder(
         root=path,
@@ -122,17 +122,18 @@ def predict(predict_image: np.ndarray, index: int, show: bool = True):
 
     print(predictions.pred_score, predictions.pred_label)
 
-
     if show:
-        visualize(title=f'classification - {index} {predictions.pred_label}', task=TaskType.CLASSIFICATION, predictions=predictions)
+        visualize(title=f'classification - {index} {predictions.pred_label}', task=TaskType.CLASSIFICATION,
+                  predictions=predictions)
         # visualize(title=f'segmentation - {index} {predictions.pred_label}', task=TaskType.SEGMENTATION)
         plt.show()
+
 
 def main():
     print('load')
 
-    # training()
-
+    training()
+    exit(0)
     # for i in range(30):
     #     abnormal_path = f'abnormal_{i}.jpg'
     #     image_path = f"./{product_name}/abnormal/{abnormal_path}"
