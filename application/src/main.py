@@ -7,6 +7,7 @@ import asyncio
 from src.predict import predictImage
 from src.train import train
 import tkinter as tk
+from tkinter import filedialog
 from tkinter import messagebox
 import sv_ttk
 from tkinter import ttk
@@ -51,11 +52,11 @@ class App(tk.Tk):
 
         # tab1
         self.tab1 = MakeModelPage(self)
-        self.tab1.setup_ui(self.content_frame)
+        self.tab1.setup_ui(self)
 
         # tab2
         self.tab2 = PredictPage(self)
-        self.tab2.setup_ui(self.content_frame)
+        self.tab2.setup_ui(self)
 
         self.tab_selected(0)
 
@@ -80,6 +81,18 @@ class App(tk.Tk):
 class MakeModelPage(TabContent):
 
     def setup_ui(self, app):
+
+        def choose_folder():
+            folder_path = filedialog.askdirectory()
+            if folder_path:
+                self.label.config(text=folder_path)
+
+        self.label = ttk.Label(self, text="학습 이미지 경로를 선택해주세요")
+        self.label.pack()
+
+        self.choose_b = ttk.Button(self, text='찾아보기', command=choose_folder)
+        self.choose_b.pack()
+
         self.train_button = ttk.Button(self, text="Train Model",
                                        command=lambda: app.do_tasks(async_loop, self.start_training))
         self.train_button.pack()
@@ -88,7 +101,7 @@ class MakeModelPage(TabContent):
         await self.make_model()
 
     async def make_model(self):
-        model_path = train(product_name='h', input_path='../res/data1')
+        model_path = train(product_name='h', input_path=self.label.cget('text'))
         print(model_path)
 
 
