@@ -29,20 +29,24 @@ class App(tk.Tk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # sidebar
         self.sidebar = ttk.Treeview(self, selectmode="browse")
-        self.sidebar.pack(side="left", fill="y")
+        self.sidebar.pack(side=tk.LEFT, fill=tk.BOTH)
 
-        self.sidebar.insert("", "end", "tab1", text="Tab 1")
-        self.sidebar.insert("", "end", "tab2", text="Tab 2")
+        self.sidebar.insert("", "end", "tab1", text="모델 만들기")
+        self.sidebar.insert("", "end", "tab2", text="예측하기")
 
         self.sidebar.bind("<<TreeviewSelect>>", self.tab_selected)
 
+        # content frame
         self.content_frame = tk.Frame(self)
-        self.content_frame.pack(side="left", fill="both", expand=True)
+        self.content_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
+        # tab1
         self.tab1 = MakeModelPage(self)
         self.tab1.setup_ui(self)
 
+        # tab2
         self.tab2 = PredictPage(self)
         self.tab2.setup_ui(self)
 
