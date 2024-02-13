@@ -1,9 +1,12 @@
+import os
 from tkinter.ttk import Style
 
 import cv2
 import numpy as np
 from datetime import datetime, timedelta
 import asyncio
+
+from src.local import model_folder_path
 from src.predict import predictImage
 from src.train import train
 import tkinter as tk
@@ -109,10 +112,15 @@ class PredictPage(TabContent):
 
     def setup_ui(self, app):
         # 모델 이름 입력 필드
-        self.model_name_label = ttk.Label(self, text="Model Name:")
+        self.model_name_label = ttk.Label(self, text="모델을 선택해 주세요")
         self.model_name_label.pack()
-        self.model_name_entry = ttk.Entry(self)
-        self.model_name_entry.pack()
+
+        self.selected_model = ttk.Label(self, text="")
+        self.selected_model.pack()
+
+        for model_path in os.listdir(model_folder_path):
+            ttk.Button(self, text=model_path, command=lambda: self.selected_model.config(text=model_path)).pack()
+
         self.predict_button = ttk.Button(self, text="Start Prediction",
                                          command=lambda: app.do_tasks(async_loop, self.start_predicting))
         self.predict_button.pack()
