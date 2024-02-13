@@ -15,7 +15,7 @@ from typing import Callable
 
 np.set_printoptions(suppress=True)
 
-camera = cv2.VideoCapture(1)
+# camera = cv2.VideoCapture(1)
 
 
 class TabContent(tk.Frame):
@@ -36,7 +36,7 @@ class App(tk.Tk):
         self.title("Sky-AI")
 
         side_bar = ttk.Frame(self)
-        side_bar.pack(anchor=tk.W, fill=tk.Y)
+        side_bar.pack(side=tk.LEFT, expand=False, fill=tk.Y)
 
         # Make the buttons with the icons to be shown
         self.make_model_b = ttk.Button(side_bar, text='모델 만들기', command=lambda: self.tab_selected(0))
@@ -72,9 +72,9 @@ class App(tk.Tk):
         self.tab1.pack_forget()
         self.tab2.pack_forget()
         if idx == 0:
-            self.tab1.pack(expand=True, fill=tk.BOTH)
+            self.tab1.pack(expand=True, fill=tk.BOTH, side=tk.LEFT)
         elif idx == 1:
-            self.tab2.pack(expand=True, fill=tk.BOTH)
+            self.tab2.pack(expand=True, fill=tk.BOTH, side=tk.LEFT)
 
 
 class MakeModelPage(TabContent):
@@ -106,9 +106,9 @@ class PredictPage(TabContent):
 
     async def predict(self, model_name: str):
         while True:
-            _, image = camera.read()
-
-            predictImage(model_name=model_name, predict_image=image)
+            # _, image = camera.read()
+            #
+            # predictImage(model_name=model_name, predict_image=image)
 
             # cv2.waitKey(1)
             await asyncio.sleep(0.5)
