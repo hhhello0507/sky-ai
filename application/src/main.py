@@ -1,3 +1,5 @@
+from tkinter.ttk import Style
+
 import cv2
 import numpy as np
 from datetime import datetime, timedelta
@@ -17,6 +19,7 @@ camera = cv2.VideoCapture(1)
 
 
 class TabContent(tk.Frame):
+
     def __init__(self, master):
         super().__init__(master)
 
@@ -29,14 +32,18 @@ class App(tk.Tk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # sidebar
-        self.sidebar = ttk.Treeview(self, selectmode="browse")
-        self.sidebar.pack(side=tk.LEFT, fill=tk.BOTH)
+        self.geometry("400x300")
+        self.title("Sky-AI")
 
-        self.sidebar.insert("", "end", "tab1", text="모델 만들기")
-        self.sidebar.insert("", "end", "tab2", text="예측하기")
+        side_bar = ttk.Frame(self)
+        side_bar.pack(anchor=tk.W, fill=tk.Y)
 
-        self.sidebar.bind("<<TreeviewSelect>>", self.tab_selected)
+        # Make the buttons with the icons to be shown
+        self.make_model_b = ttk.Button(side_bar, text='모델 만들기', command=lambda: self.tab_selected(0))
+        self.make_model_b.pack(side=tk.TOP)
+
+        self.predict_b = ttk.Button(side_bar, text='이미지 예측', command=lambda: self.tab_selected(1))
+        self.predict_b.pack(side=tk.TOP)
 
         # content frame
         self.content_frame = tk.Frame(self)
@@ -44,14 +51,13 @@ class App(tk.Tk):
 
         # tab1
         self.tab1 = MakeModelPage(self)
-        self.tab1.setup_ui(self)
+        self.tab1.setup_ui(self.content_frame)
 
         # tab2
         self.tab2 = PredictPage(self)
-        self.tab2.setup_ui(self)
+        self.tab2.setup_ui(self.content_frame)
 
-        self.sidebar.selection_set("tab1")  # 기본으로 첫 번째 탭 선택
-        self.tab_selected()
+        self.tab_selected(0)
 
     def _asyncio_thread(self, async_loop, task: Callable):
         async_loop.run_until_complete(task())
@@ -62,14 +68,13 @@ class App(tk.Tk):
         else:
             messagebox.showerror("에러", "이미 다른 작업이 실행중입니다")
 
-    def tab_selected(self, event=None):
-        selected_item = self.sidebar.selection()[0]
+    def tab_selected(self, idx):
         self.tab1.pack_forget()
         self.tab2.pack_forget()
-        if selected_item == "tab1":
-            self.tab1.pack(fill="both", expand=True)
-        elif selected_item == "tab2":
-            self.tab2.pack(fill="both", expand=True)
+        if idx == 0:
+            self.tab1.pack(expand=True, fill=tk.BOTH)
+        elif idx == 1:
+            self.tab2.pack(expand=True, fill=tk.BOTH)
 
 
 class MakeModelPage(TabContent):
@@ -130,8 +135,5 @@ async_loop = asyncio.get_event_loop()
 
 # GUI 생성
 app = App()
-app.title("Model Training and Prediction")
-
 sv_ttk.set_theme('light')
-
 app.mainloop()
