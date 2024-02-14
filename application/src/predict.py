@@ -28,7 +28,9 @@ def predictImage(model_name: str, predict_image: np.ndarray):
 
     predictions = inferencer.predict(image=predict_image)
 
-    print(predictions.pred_score, predictions.pred_label)
+    result = (predictions.pred_score, predictions.pred_label)
+    print(result)
+    return result
 
     # if show:
     #     visualize(title=f'classification - {index} {predictions.pred_label}', task=TaskType.CLASSIFICATION,

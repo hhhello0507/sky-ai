@@ -143,6 +143,13 @@ class PredictPage(TabContent):
                                          style='Accent.TButton',
                                          command=lambda: app.do_tasks(async_loop, self.start_predicting))
         self.predict_button.pack()
+
+        self.score_label = ttk.Label(self)
+        self.score_label.pack()
+
+        self.result_label = ttk.Label(self)
+        self.result_label.pack()
+        
         self.image = ttk.Label(self)
         self.image.pack()
 
@@ -150,10 +157,12 @@ class PredictPage(TabContent):
         while True:
             _, image = camera.read()
 
-            predictImage(model_name=model_name, predict_image=image)
+            score, result = predictImage(model_name=model_name, predict_image=image)
             photo = ImageTk.PhotoImage(Image.fromarray(image))
             self.image.config(image=photo)
             self.image.image = photo
+            self.score_label.configure(text='정확도: ' + str(int(score * 100)) + '%')
+            self.result_label.configure(text='결과: ' + '정상' if result else '불량')
 
             # cv2.waitKey(1)
             await asyncio.sleep(0.5)
