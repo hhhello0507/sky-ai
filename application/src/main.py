@@ -36,29 +36,29 @@ class App(tk.Tk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.geometry("400x300")
+        self.geometry("720x480")
         self.title("Sky-AI")
 
-        side_bar = ttk.Frame(self)
-        side_bar.pack(side=tk.LEFT, expand=False, fill=tk.Y)
+        self.side_bar = ttk.Frame(self)
+        self.side_bar.pack(anchor=tk.N, side=tk.LEFT)
 
         # Make the buttons with the icons to be shown
-        self.make_model_b = ttk.Button(side_bar, text='모델 만들기', command=lambda: self.tab_selected(0))
+        self.make_model_b = ttk.Button(self.side_bar, text='모델 만들기', command=lambda: self.tab_selected(0))
         self.make_model_b.pack(side=tk.TOP)
 
-        self.predict_b = ttk.Button(side_bar, text='이미지 예측', command=lambda: self.tab_selected(1))
+        self.predict_b = ttk.Button(self.side_bar, text='이미지 예측', command=lambda: self.tab_selected(1))
         self.predict_b.pack(side=tk.TOP)
 
         # content frame
-        self.content_frame = tk.Frame(self)
+        self.content_frame = tk.LabelFrame(self)
         self.content_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # tab1
-        self.tab1 = MakeModelPage(self)
+        self.tab1 = MakeModelPage(self.content_frame)
         self.tab1.setup_ui(self)
 
         # tab2
-        self.tab2 = PredictPage(self)
+        self.tab2 = PredictPage(self.content_frame)
         self.tab2.setup_ui(self)
 
         self.tab_selected(0)
@@ -145,11 +145,11 @@ class PredictPage(TabContent):
             await asyncio.sleep(0.5)
 
     async def start_predicting(self):
-        model_name = self.model_name_entry.get()
+        model_name = self.selected_model.cget('text')
         if not model_name:
             messagebox.showerror("에러", "모델 이름을 입력해 주세요.")
             return
-        await asyncio.gather(self.predict(self.model_name_entry.get()), self.send_arduino())
+        await asyncio.gather(self.predict(self.selected_model.cget('text')), self.send_arduino())
 
 
 async_loop = asyncio.get_event_loop()
