@@ -21,7 +21,6 @@ np.set_printoptions(suppress=True)
 
 # camera = cv2.VideoCapture(1)
 
-
 class TabContent(tk.Frame):
 
     def __init__(self, master):
@@ -43,7 +42,8 @@ class App(tk.Tk):
         self.side_bar.pack(anchor=tk.N, side=tk.LEFT)
 
         # Make the buttons with the icons to be shown
-        self.make_model_b = ttk.Button(self.side_bar, text='모델 만들기', command=lambda: self.tab_selected(0))
+        self.make_model_b = ttk.Button(self.side_bar, text='모델 만들기', command=lambda: self.tab_selected(0),
+                                       style='SideBar.TButton')
         self.make_model_b.pack(side=tk.TOP)
 
         self.predict_b = ttk.Button(self.side_bar, text='이미지 예측', command=lambda: self.tab_selected(1))
@@ -84,7 +84,6 @@ class App(tk.Tk):
 class MakeModelPage(TabContent):
 
     def setup_ui(self, app):
-
         def choose_folder():
             folder_path = filedialog.askdirectory()
             if folder_path:
@@ -96,7 +95,9 @@ class MakeModelPage(TabContent):
         self.choose_b = ttk.Button(self, text='찾아보기', command=choose_folder)
         self.choose_b.pack()
 
-        self.train_button = ttk.Button(self, text="Train Model",
+        self.train_button = ttk.Button(self,
+                                       text="Train Model",
+                                       style='Accent.TButton',
                                        command=lambda: app.do_tasks(async_loop, self.start_training))
         self.train_button.pack()
 
@@ -122,6 +123,7 @@ class PredictPage(TabContent):
             ttk.Button(self, text=model_path, command=lambda: self.selected_model.config(text=model_path)).pack()
 
         self.predict_button = ttk.Button(self, text="Start Prediction",
+                                         style='Accent.TButton',
                                          command=lambda: app.do_tasks(async_loop, self.start_predicting))
         self.predict_button.pack()
 
@@ -156,5 +158,7 @@ async_loop = asyncio.get_event_loop()
 
 # GUI 생성
 app = App()
+# app.attributes("-topmost", True)
 sv_ttk.set_theme('light')
+app.update_idletasks()  # Make sure every screen redrawing is done
 app.mainloop()
