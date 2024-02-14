@@ -6,6 +6,9 @@ import numpy as np
 from datetime import datetime, timedelta
 import asyncio
 
+from PIL import ImageTk, Image
+
+from src.constant import app_title
 from src.local import model_folder_path
 from src.predict import predictImage
 from src.train import train
@@ -19,7 +22,8 @@ from typing import Callable
 
 np.set_printoptions(suppress=True)
 
-# camera = cv2.VideoCapture(1)
+
+camera = cv2.VideoCapture(1)
 
 class TabContent(tk.Frame):
 
@@ -36,7 +40,7 @@ class App(tk.Tk):
         super().__init__(*args, **kwargs)
 
         self.geometry("720x480")
-        self.title("Sky-AI")
+        self.title(app_title)
 
         self.side_bar = ttk.Frame(self)
         self.side_bar.pack(anchor=tk.N, side=tk.LEFT)
@@ -89,7 +93,13 @@ class MakeModelPage(TabContent):
             if folder_path:
                 self.label.config(text=folder_path)
 
-        self.label = ttk.Label(self, text="학습 이미지 경로를 선택해주세요")
+        self.title = ttk.Label(self, text="제품 이름을 입력해 주세요")
+        self.title.pack()
+
+        self.entry = ttk.Entry(self)
+        self.entry.pack()
+
+        self.label = ttk.Label(self, text="학습 이미지 경로를 선택해 주세요")
         self.label.pack()
 
         self.choose_b = ttk.Button(self, text='찾아보기', command=choose_folder)
@@ -105,8 +115,15 @@ class MakeModelPage(TabContent):
         await self.make_model()
 
     async def make_model(self):
-        model_path = train(product_name='h', input_path=self.label.cget('text'))
-        print(model_path)
+        try:
+            if not len(self.entry.get()):
+                messagebox.showerror("실패", '상품 이름을 입력해 주세요')
+                return
+            model_path = train(product_name=self.entry.get(), input_path=self.label.cget('text'))
+            print(model_path)
+            messagebox.showinfo('성공', '모델 훈련이 완료되었습니다')
+        except:
+            messagebox.showerror('실패', '이미지 경로가 올바르지 않습니다')
 
 
 class PredictPage(TabContent):
@@ -126,12 +143,17 @@ class PredictPage(TabContent):
                                          style='Accent.TButton',
                                          command=lambda: app.do_tasks(async_loop, self.start_predicting))
         self.predict_button.pack()
+        self.image = ttk.Label(self)
+        self.image.pack()
 
     async def predict(self, model_name: str):
         while True:
-            # _, image = camera.read()
-            #
-            # predictImage(model_name=model_name, predict_image=image)
+            _, image = camera.read()
+
+            predictImage(model_name=model_name, predict_image=image)
+            photo = ImageTk.PhotoImage(Image.fromarray(image))
+            self.image.config(image=photo)
+            self.image.image = photo
 
             # cv2.waitKey(1)
             await asyncio.sleep(0.5)
@@ -160,5 +182,5 @@ async_loop = asyncio.get_event_loop()
 app = App()
 # app.attributes("-topmost", True)
 sv_ttk.set_theme('light')
-app.update_idletasks()  # Make sure every screen redrawing is done
+# app.update_idletasks()  # Make sure every screen redrawing is done
 app.mainloop()
