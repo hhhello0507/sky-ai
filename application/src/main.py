@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import asyncio
 
 from PIL import ImageTk, Image
+from enum import Enum
 
 from src.constant import app_title
 from src.local import model_folder_path
@@ -18,11 +19,16 @@ from tkinter import messagebox
 import sv_ttk
 from tkinter import ttk
 from threading import Thread
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Coroutine
 
 np.set_printoptions(suppress=True)
 
 camera = cv2.VideoCapture(1)
+
+
+class PredictMode(Enum):
+    Wait = 0
+    Predict = 1
 
 
 class TabContent(tk.Frame):
@@ -94,7 +100,8 @@ class MakeModelPage(TabContent):
         self.label = ttk.Label(self, text="상품 이미지 경로를 선택해 주세요")
         self.path_label = ttk.Label(self, text="...")
         self.choose_b = ttk.Button(self, text='찾아보기', command=self.choose_folder)
-        self.train_button = ttk.Button(self, text="학습 시작", style='Accent.TButton', command=lambda: app.do_tasks(async_loop, self.start_training))
+        self.train_button = ttk.Button(self, text="학습 시작", style='Accent.TButton',
+                                       command=lambda: app.do_tasks(async_loop, self.start_training))
 
         self.is_path_selected = False
         self.__path_label_text = ''
@@ -147,14 +154,26 @@ class PredictPage(TabContent):
         self.is_selected = False
         self.__selected_model_text = ""
         self.selected_model = ttk.Label(self, text="모델을 선택해 주세요")
-        self.predict_button = ttk.Button(self, text="예측 시작", style='Accent.TButton', command=lambda: app.do_tasks(async_loop, self.start_predicting))
+        self.predict_button = ttk.Button(self, text="예측 시작", style='Accent.TButton',
+                                         command=lambda: app.do_tasks(async_loop, self.start_predicting))
         self.model_button_list: List[ttk.Button] = []
         for model_path in os.listdir(model_folder_path):
-            model_button = ttk.Button(self, text=model_path, command=lambda: self.on_click_model_button(model_path))
+            model_button = ttk.Button(self, text=model_path, command=lambda: on_click_model_button(model_path))
             self.model_button_list.append(model_button)
         self.score_label = ttk.Label(self)
         self.result_label = ttk.Label(self)
         self.image = ttk.Label(self)
+        self.mode = PredictMode.Wait
+        self.exit_button = ttk.Button(self, text='종료', style='Accent.TButton', command=lambda: on_click_exit_button())
+
+        self.tasks: List[Coroutine] = []
+
+        def on_click_model_button(model_path: str):
+            self.selected_model_text = model_path
+
+        def on_click_exit_button():
+            self.mode = PredictMode.Wait
+            self.setup_main_ui()
 
     @property
     def selected_model_text(self):
@@ -166,21 +185,24 @@ class PredictPage(TabContent):
         self.__selected_model_text = selected_model_text
         self.selected_model.configure(text='선택된 모델: ' + selected_model_text)
 
-    def on_click_model_button(self, model_path: str):
-        self.selected_model_text = model_path
+    def setup_main_ui(self):
 
-    def setup_ui(self, app):
-        # 모델 이름 입력 필드
+        self.score_label.pack_forget()
+        self.result_label.pack_forget()
+        self.image.pack_forget()
+        self.exit_button.pack_forget()
+
         self.selected_model.pack(anchor=tk.W, padx=(20, 0), pady=(20, 0))
         for model_button in self.model_button_list:
             model_button.pack(anchor=tk.W, padx=(20, 0), pady=(5, 0))
         self.predict_button.pack(anchor=tk.W, padx=(20, 0), pady=(20, 0))
-        self.score_label.pack()
-        self.result_label.pack()
-        self.image.pack()
+
+    def setup_ui(self, app):
+        # 모델 이름 입력 필드
+        self.setup_main_ui()
 
     async def predict(self, model_name: str):
-        while True:
+        while True and self.mode == PredictMode.Predict:
             _, image = camera.read()
 
             score, result = predictImage(model_name=model_name, predict_image=image)
@@ -195,7 +217,7 @@ class PredictPage(TabContent):
 
     async def send_arduino(self):
         before_time = datetime.now()
-        while True:
+        while True and self.mode == PredictMode.Predict:
             current_time = datetime.now()
             if before_time + timedelta(seconds=1) < current_time:
                 # send
@@ -210,7 +232,13 @@ class PredictPage(TabContent):
         for model_button in self.model_button_list:
             model_button.pack_forget()
         self.predict_button.pack_forget()
-        await asyncio.gather(self.predict(self.selected_model_text), self.send_arduino())
+        self.tasks = [self.predict(self.selected_model_text), self.send_arduino()]
+        self.exit_button.pack()
+        self.score_label.pack()
+        self.result_label.pack()
+        self.image.pack()
+        self.mode = PredictMode.Predict
+        await asyncio.gather(*self.tasks)
 
 
 async_loop = asyncio.get_event_loop()
