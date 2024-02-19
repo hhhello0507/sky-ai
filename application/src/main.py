@@ -18,7 +18,7 @@ from tkinter import messagebox
 import sv_ttk
 from tkinter import ttk
 from threading import Thread
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 np.set_printoptions(suppress=True)
 
@@ -156,8 +156,8 @@ class PredictPage(TabContent):
         super().__init__(master)
         self.is_selected = False
         self.__selected_model_text = ""
-        self.selected_model = None
-        self.predict_button = None
+        self.selected_model: Optional[ttk.Button] = None
+        self.predict_button: Optional[ttk.Button] = None
         self.model_button_list: List[ttk.Button] = []
 
     @property
@@ -228,6 +228,7 @@ class PredictPage(TabContent):
             return
         for model_button in self.model_button_list:
             model_button.pack_forget()
+        self.predict_button.pack_forget()
         await asyncio.gather(self.predict(self.selected_model_text), self.send_arduino())
 
 
