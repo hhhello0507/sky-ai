@@ -22,8 +22,8 @@ from typing import Callable
 
 np.set_printoptions(suppress=True)
 
-
 camera = cv2.VideoCapture(1)
+
 
 class TabContent(tk.Frame):
 
@@ -128,16 +128,33 @@ class MakeModelPage(TabContent):
 
 class PredictPage(TabContent):
 
+    def __init__(self, master):
+        super().__init__(master)
+        self.is_selected = False
+        self.__selected_model_text = ""
+        self.selected_model = None
+        self.predict_button = None
+
+    @property
+    def selected_model_text(self):
+        return self.__selected_model_text
+
+    @selected_model_text.setter
+    def selected_model_text(self, selected_model_text):
+        self.is_selected = True
+        self.__selected_model_text = selected_model_text
+        self.selected_model.configure(text='선택된 모델: ' + selected_model_text)
+
     def setup_ui(self, app):
         # 모델 이름 입력 필드
-        self.model_name_label = ttk.Label(self, text="모델을 선택해 주세요")
-        self.model_name_label.pack()
-
-        self.selected_model = ttk.Label(self, text="")
+        self.selected_model = ttk.Label(self, text="모델을 선택해 주세요")
         self.selected_model.pack()
 
+        def on_click_model_button(model_path: str):
+            self.selected_model_text = model_path
+
         for model_path in os.listdir(model_folder_path):
-            ttk.Button(self, text=model_path, command=lambda: self.selected_model.config(text=model_path)).pack()
+            ttk.Button(self, text=model_path, command=lambda: on_click_model_button(model_path)).pack()
 
         self.predict_button = ttk.Button(self, text="Start Prediction",
                                          style='Accent.TButton',
@@ -149,7 +166,7 @@ class PredictPage(TabContent):
 
         self.result_label = ttk.Label(self)
         self.result_label.pack()
-        
+
         self.image = ttk.Label(self)
         self.image.pack()
 
@@ -178,11 +195,10 @@ class PredictPage(TabContent):
             await asyncio.sleep(0.5)
 
     async def start_predicting(self):
-        model_name = self.selected_model.cget('text')
-        if not model_name:
-            messagebox.showerror("에러", "모델 이름을 입력해 주세요.")
+        if not self.is_selected:
+            messagebox.showerror("에러", "모델을 선택해 주세요.")
             return
-        await asyncio.gather(self.predict(self.selected_model.cget('text')), self.send_arduino())
+        await asyncio.gather(self.predict(self.selected_model_text), self.send_arduino())
 
 
 async_loop = asyncio.get_event_loop()
