@@ -39,7 +39,7 @@ class App(tk.Tk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.geometry("720x480")
+        self.geometry("900x600")
         self.title(app_title)
 
         self.side_bar = ttk.Frame(self)
@@ -89,8 +89,12 @@ class MakeModelPage(TabContent):
 
     def __init__(self, master):
         super().__init__(master)
-        self.label = None
-        self.path_label = None
+        self.title = ttk.Label(self, text="제품 이름을 입력해 주세요")
+        self.entry = ttk.Entry(self)
+        self.label = ttk.Label(self, text="상품 이미지 경로를 선택해 주세요")
+        self.path_label = ttk.Label(self, text="...")
+        self.choose_b = ttk.Button(self, text='찾아보기', command=self.choose_folder)
+        self.train_button = ttk.Button(self, text="학습 시작", style='Accent.TButton', command=lambda: app.do_tasks(async_loop, self.start_training))
 
         self.is_path_selected = False
         self.__path_label_text = ''
@@ -105,31 +109,17 @@ class MakeModelPage(TabContent):
         self.is_path_selected = True
         self.path_label.config(text=value)
 
+    def choose_folder(self):
+        folder_path = filedialog.askdirectory()
+        if folder_path:
+            self.path_label_text = folder_path
+
     def setup_ui(self, app):
-        def choose_folder():
-            folder_path = filedialog.askdirectory()
-            if folder_path:
-                self.path_label_text = folder_path
-
-        self.title = ttk.Label(self, text="제품 이름을 입력해 주세요")
         self.title.pack(anchor=tk.W, pady=(20, 0), padx=20)
-
-        self.entry = ttk.Entry(self)
         self.entry.pack(anchor=tk.W, pady=(5, 0), padx=20)
-
-        self.label = ttk.Label(self, text="상품 이미지 경로를 선택해 주세요")
         self.label.pack(anchor=tk.W, pady=(15, 0), padx=20)
-
-        self.path_label = ttk.Label(self, text="...")
         self.path_label.pack(anchor=tk.W, pady=(5, 0), padx=(20, 0))
-
-        self.choose_b = ttk.Button(self, text='찾아보기', command=choose_folder)
         self.choose_b.pack(anchor=tk.W, pady=(5, 0), padx=(75, 0))
-
-        self.train_button = ttk.Button(self,
-                                       text="학습 시작",
-                                       style='Accent.TButton',
-                                       command=lambda: app.do_tasks(async_loop, self.start_training))
         self.train_button.pack(anchor=tk.W, padx=(73, 0), pady=(20, 0))
 
     async def start_training(self):
@@ -156,9 +146,15 @@ class PredictPage(TabContent):
         super().__init__(master)
         self.is_selected = False
         self.__selected_model_text = ""
-        self.selected_model: Optional[ttk.Button] = None
-        self.predict_button: Optional[ttk.Button] = None
+        self.selected_model = ttk.Label(self, text="모델을 선택해 주세요")
+        self.predict_button = ttk.Button(self, text="예측 시작", style='Accent.TButton', command=lambda: app.do_tasks(async_loop, self.start_predicting))
         self.model_button_list: List[ttk.Button] = []
+        for model_path in os.listdir(model_folder_path):
+            model_button = ttk.Button(self, text=model_path, command=lambda: self.on_click_model_button(model_path))
+            self.model_button_list.append(model_button)
+        self.score_label = ttk.Label(self)
+        self.result_label = ttk.Label(self)
+        self.image = ttk.Label(self)
 
     @property
     def selected_model_text(self):
@@ -170,32 +166,17 @@ class PredictPage(TabContent):
         self.__selected_model_text = selected_model_text
         self.selected_model.configure(text='선택된 모델: ' + selected_model_text)
 
+    def on_click_model_button(self, model_path: str):
+        self.selected_model_text = model_path
+
     def setup_ui(self, app):
         # 모델 이름 입력 필드
-        self.selected_model = ttk.Label(self, text="모델을 선택해 주세요")
         self.selected_model.pack(anchor=tk.W, padx=(20, 0), pady=(20, 0))
-
-        def on_click_model_button(model_path: str):
-            self.selected_model_text = model_path
-
-        for model_path in os.listdir(model_folder_path):
-
-            model_button = ttk.Button(self, text=model_path, command=lambda: on_click_model_button(model_path))
-            self.model_button_list.append(model_button)
+        for model_button in self.model_button_list:
             model_button.pack(anchor=tk.W, padx=(20, 0), pady=(5, 0))
-
-        self.predict_button = ttk.Button(self, text="예측 시작",
-                                         style='Accent.TButton',
-                                         command=lambda: app.do_tasks(async_loop, self.start_predicting))
         self.predict_button.pack(anchor=tk.W, padx=(20, 0), pady=(20, 0))
-
-        self.score_label = ttk.Label(self)
         self.score_label.pack()
-
-        self.result_label = ttk.Label(self)
         self.result_label.pack()
-
-        self.image = ttk.Label(self)
         self.image.pack()
 
     async def predict(self, model_name: str):
