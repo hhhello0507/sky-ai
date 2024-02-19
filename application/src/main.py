@@ -18,7 +18,7 @@ from tkinter import messagebox
 import sv_ttk
 from tkinter import ttk
 from threading import Thread
-from typing import Callable
+from typing import Callable, List
 
 np.set_printoptions(suppress=True)
 
@@ -130,7 +130,7 @@ class MakeModelPage(TabContent):
                                        text="학습 시작",
                                        style='Accent.TButton',
                                        command=lambda: app.do_tasks(async_loop, self.start_training))
-        self.train_button.pack(anchor=tk.W, padx=(75, 0), pady=(20, 0))
+        self.train_button.pack(anchor=tk.W, padx=(73, 0), pady=(20, 0))
 
     async def start_training(self):
         await self.make_model()
@@ -158,6 +158,7 @@ class PredictPage(TabContent):
         self.__selected_model_text = ""
         self.selected_model = None
         self.predict_button = None
+        self.model_button_list: List[ttk.Button] = []
 
     @property
     def selected_model_text(self):
@@ -172,18 +173,21 @@ class PredictPage(TabContent):
     def setup_ui(self, app):
         # 모델 이름 입력 필드
         self.selected_model = ttk.Label(self, text="모델을 선택해 주세요")
-        self.selected_model.pack()
+        self.selected_model.pack(anchor=tk.W, padx=(20, 0), pady=(20, 0))
 
         def on_click_model_button(model_path: str):
             self.selected_model_text = model_path
 
         for model_path in os.listdir(model_folder_path):
-            ttk.Button(self, text=model_path, command=lambda: on_click_model_button(model_path)).pack()
 
-        self.predict_button = ttk.Button(self, text="Start Prediction",
+            model_button = ttk.Button(self, text=model_path, command=lambda: on_click_model_button(model_path))
+            self.model_button_list.append(model_button)
+            model_button.pack(anchor=tk.W, padx=(20, 0), pady=(5, 0))
+
+        self.predict_button = ttk.Button(self, text="예측 시작",
                                          style='Accent.TButton',
                                          command=lambda: app.do_tasks(async_loop, self.start_predicting))
-        self.predict_button.pack()
+        self.predict_button.pack(anchor=tk.W, padx=(20, 0), pady=(20, 0))
 
         self.score_label = ttk.Label(self)
         self.score_label.pack()
@@ -222,6 +226,8 @@ class PredictPage(TabContent):
         if not self.is_selected:
             messagebox.showerror("에러", "모델을 선택해 주세요.")
             return
+        for model_button in self.model_button_list:
+            model_button.pack_forget()
         await asyncio.gather(self.predict(self.selected_model_text), self.send_arduino())
 
 
