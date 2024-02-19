@@ -87,29 +87,50 @@ class App(tk.Tk):
 
 class MakeModelPage(TabContent):
 
+    def __init__(self, master):
+        super().__init__(master)
+        self.label = None
+        self.path_label = None
+
+        self.is_path_selected = False
+        self.__path_label_text = ''
+
+    @property
+    def path_label_text(self):
+        return self.__path_label_text
+
+    @path_label_text.setter
+    def path_label_text(self, value):
+        self.__path_label_text = value
+        self.is_path_selected = True
+        self.path_label.config(text=value)
+
     def setup_ui(self, app):
         def choose_folder():
             folder_path = filedialog.askdirectory()
             if folder_path:
-                self.label.config(text=folder_path)
+                self.path_label_text = folder_path
 
         self.title = ttk.Label(self, text="제품 이름을 입력해 주세요")
-        self.title.pack()
+        self.title.pack(anchor=tk.W, pady=(20, 0), padx=20)
 
         self.entry = ttk.Entry(self)
-        self.entry.pack()
+        self.entry.pack(anchor=tk.W, pady=(5, 0), padx=20)
 
-        self.label = ttk.Label(self, text="학습 이미지 경로를 선택해 주세요")
-        self.label.pack()
+        self.label = ttk.Label(self, text="상품 이미지 경로를 선택해 주세요")
+        self.label.pack(anchor=tk.W, pady=(15, 0), padx=20)
+
+        self.path_label = ttk.Label(self, text="...")
+        self.path_label.pack(anchor=tk.W, pady=(5, 0), padx=(20, 0))
 
         self.choose_b = ttk.Button(self, text='찾아보기', command=choose_folder)
-        self.choose_b.pack()
+        self.choose_b.pack(anchor=tk.W, pady=(5, 0), padx=(75, 0))
 
         self.train_button = ttk.Button(self,
-                                       text="Train Model",
+                                       text="학습 시작",
                                        style='Accent.TButton',
                                        command=lambda: app.do_tasks(async_loop, self.start_training))
-        self.train_button.pack()
+        self.train_button.pack(anchor=tk.W, padx=(75, 0), pady=(20, 0))
 
     async def start_training(self):
         await self.make_model()
@@ -118,6 +139,9 @@ class MakeModelPage(TabContent):
         try:
             if not len(self.entry.get()):
                 messagebox.showerror("실패", '상품 이름을 입력해 주세요')
+                return
+            if not self.is_path_selected:
+                messagebox.showerror("실패", '상품 이미지 경로를 선택해 주세요')
                 return
             model_path = train(product_name=self.entry.get(), input_path=self.label.cget('text'))
             print(model_path)
