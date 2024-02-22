@@ -23,7 +23,19 @@ from typing import Callable, List, Optional, Coroutine
 
 np.set_printoptions(suppress=True)
 
-camera = cv2.VideoCapture(1)
+
+def get_available_cameras() -> List[int]:
+    index = 0
+    arr = []
+    while True:
+        cap = cv2.VideoCapture(index)
+        if not cap.read()[0]:
+            break
+        else:
+            arr.append(index)
+        cap.release()
+        index += 1
+    return arr
 
 
 class PredictMode(Enum):
@@ -151,6 +163,24 @@ class PredictPage(TabContent):
 
     def __init__(self, master):
         super().__init__(master)
+        self.cams = [*map(str, get_available_cameras())]
+        self.__camera: Optional[cv2.VideoCapture] = cv2.VideoCapture(int(self.cams[0]))
+        # set up variable
+        self.camera_var = tk.StringVar(self)
+
+        self.camera_label = ttk.Label(self, text=f"카메라를 선택해 주세요 ({min(self.cams)} ~ {max(self.cams)})")
+
+        def set_camera(*args, **kwargs):
+            self.__camera = cv2.VideoCapture(int(self.camera_var.get()))
+
+        self.camera_dropdown = ttk.OptionMenu(
+            self,
+            self.camera_var,
+            self.cams[0],
+            *self.cams,
+            command=set_camera
+        )
+
         self.is_selected = False
         self.__selected_model_text = ""
         self.selected_model = ttk.Label(self, text="모델을 선택해 주세요")
@@ -176,6 +206,14 @@ class PredictPage(TabContent):
             self.setup_main_ui()
 
     @property
+    def camera(self):
+        return self.__camera
+
+    @camera.setter
+    def camera(self, num):
+        self.__camera = cv2.VideoCapture(num)
+
+    @property
     def selected_model_text(self):
         return self.__selected_model_text
 
@@ -192,6 +230,9 @@ class PredictPage(TabContent):
         self.image.pack_forget()
         self.exit_button.pack_forget()
 
+        self.camera_label.pack(anchor=tk.W, padx=(20, 0), pady=(20, 0))
+        self.camera_dropdown.pack(anchor=tk.W, padx=(20, 0), pady=(5, 0))
+
         self.selected_model.pack(anchor=tk.W, padx=(20, 0), pady=(20, 0))
         for model_button in self.model_button_list:
             model_button.pack(anchor=tk.W, padx=(20, 0), pady=(5, 0))
@@ -203,17 +244,17 @@ class PredictPage(TabContent):
 
     async def predict(self, model_name: str):
         while True and self.mode == PredictMode.Predict:
-            _, image = camera.read()
+            _, image = self.camera.read()
 
             score, result = predictImage(model_name=model_name, predict_image=image)
             photo = ImageTk.PhotoImage(Image.fromarray(image))
             self.image.config(image=photo)
-            self.image.image = photo
+            # self.image.image = photo
             self.score_label.configure(text='정확도: ' + str(int(score * 100)) + '%')
             self.result_label.configure(text='결과: ' + '정상' if result else '불량')
 
             # cv2.waitKey(1)
-            await asyncio.sleep(0.5)
+            # await asyncio.sleep(0.1)
 
     async def send_arduino(self):
         before_time = datetime.now()
@@ -223,7 +264,7 @@ class PredictPage(TabContent):
                 # send
                 print('send arduino')
                 before_time = current_time
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1)
 
     async def start_predicting(self):
         if not self.is_selected:
